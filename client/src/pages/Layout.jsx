@@ -17,7 +17,7 @@ const Layout = () => {
             onClick={() => navigate('/')} 
             className="cursor-pointer text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent"
           >
-            NeuroGen AI
+            NeuroGen.AI
           </h1>
           {
             sidebar ? <X onClick={()=>setSidebar(false)} className='w-6 h-6 text-gray-600 sm:hidden' />
