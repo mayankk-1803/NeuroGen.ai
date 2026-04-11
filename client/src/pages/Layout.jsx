@@ -12,7 +12,13 @@ const Layout = () => {
   return user ? (
     <div className='flex flex-col items-start justify-start h-screen'>
         <nav className='w-full px-8 min-h-14 flex items-center justify-between border-b border-gray-200'>
-          <img className='cursor-pointer w-32 sm:w-44' src={assets.logo} alt="" onClick={()=> navigate('/')} />
+          {/* <img className='cursor-pointer w-32 sm:w-44' src={assets.logo} alt="" onClick={()=> navigate('/')} /> */}
+          <h1 
+            onClick={() => navigate('/')} 
+            className="cursor-pointer text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent"
+          >
+            NeuroGen AI
+          </h1>
           {
             sidebar ? <X onClick={()=>setSidebar(false)} className='w-6 h-6 text-gray-600 sm:hidden' />
               : <Menu onClick={()=>setSidebar(true)} className='w-6 h-6 text-gray-600 sm:hidden' />

@@ -1,18 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-*{
-  font-family: "Outfit", sans-serif;
+* {
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@theme{
-  --color-primary: #5044E5;
+html {
+  scroll-behavior: smooth;
 }
 
-.reset-tw, .reset-tw *{
-  all: revert !important
+body {
+  overflow-x: hidden;
+}
+
+@theme {
+  --color-primary: #8b5cf6;
+}
+
+.reset-tw, .reset-tw * {
+  all: revert !important;
 }
 
 .cl-drawerRoot{
   z-index: 10;
 }
+
+/* Enhancements for Clerk Pricing Component wrapper and deep overrides */
+.pricing-wrapper .cl-pricingTable {
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  padding: 1rem;
+}
+
+/* Targeting common Clerk generic classes if applicable */
+.pricing-wrapper .cl-pricingTableCard {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pricing-wrapper .cl-pricingTableCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 30px -5px rgba(139, 92, 246, 0.15), 0 10px 10px -5px rgba(139, 92, 246, 0.05);
+}
+
+/* Ensure the second (Premium) card is highlighted and sticks out */
+.pricing-wrapper .cl-pricingTableCard:nth-child(2) {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  z-index: 10;
+  position: relative;
+}
+.pricing-wrapper .cl-pricingTableCard:nth-child(2):hover {
+  transform: translateY(-8px) scale(1.07);
+  box-shadow: 0 25px 40px -5px rgba(139, 92, 246, 0.3);
+}
+
+/* Button smooth transitions in Clerk */
+.pricing-wrapper button {
+  transition: all 0.3s ease !important;
+}
+.pricing-wrapper button:hover {
+  transform: scale(1.03) !important;
+  filter: brightness(1.1);
+}
+.pricing-wrapper button:active {
+  transform: scale(0.95) !important;
+}
+
