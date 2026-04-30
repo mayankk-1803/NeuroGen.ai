@@ -265,8 +265,7 @@ const Chatbot = () => {
                     "How to use this site?",
                     "What tools are available?",
                     "Generate an image",
-                    "Review my resume",
-                    "Pricing plans"
+                    "Review my resume"
                   ].map((suggestion, i) => (
                     <button
                       key={i}

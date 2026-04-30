@@ -279,7 +279,7 @@ export const chatBot = async (req, res) => {
     if (plan !== "premium" && free_usage >= 10) {
       return res.json({
         success: false,
-        message: "Limit reached, upgrade the plan to continue..",
+        message: "Usage limit reached for today.",
       });
     }
 
@@ -343,8 +343,7 @@ OUTPUT FORMAT (STRICT JSON):
             "Go to Dashboard to access all tools",
             "Select a tool (Text, Image, Resume, etc.)",
             "Enter your input and generate results",
-            "Download or reuse your content",
-            "Upgrade for higher limits"
+            "Download or reuse your content"
           ],
           action: {
             label: "Go to Dashboard",
@@ -373,22 +372,6 @@ OUTPUT FORMAT (STRICT JSON):
           action: {
             label: "Explore Tools",
             target: "/ai"
-          }
-        }
-      });
-    }
-
-    // 3. Pricing / Plan / Upgrade
-    if (lastMessage.includes("pricing") || lastMessage.includes("plan") || lastMessage.includes("upgrade")) {
-      return res.json({
-        success: true,
-        reply: {
-          type: "action",
-          title: "Pricing & Plans",
-          content: "Free users have limited usage. Upgrade for more AI generations.",
-          action: {
-            label: "View Plans",
-            target: "/"
           }
         }
       });
