@@ -7,11 +7,6 @@ import FormData from "form-data";
 import fs from 'fs'
 import pdf from 'pdf-parse/lib/pdf-parse.js'
 
-// const AI = new OpenAI({
-//   apiKey: process.env.GEMINI_API_KEY,
-//   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-// });
-
 const AI = new OpenAI({
  apiKey: process.env.GROQ_API_KEY,
  baseURL: "https://api.groq.com/openai/v1"
@@ -31,17 +26,6 @@ export const generateArticle = async (req, res) => {
       });
     }
 
-    // const response = await AI.chat.completions.create({
-    //   model: "gemini-2.0-flash",
-    //   messages: [
-    //     {
-    //       role: "user",
-    //       content: prompt,
-    //     },
-    //   ],
-    //   temperature: 0.7,
-    //   max_tokens: length,
-    // });
 
     const response = await AI.chat.completions.create({
   model: "llama-3.1-8b-instant",
@@ -86,17 +70,6 @@ export const generateBlogTitle = async (req, res) => {
       });
     }
 
-    // const response = await AI.chat.completions.create({
-    //   model: "gemini-2.0-flash",
-    //   messages: [
-    //     {
-    //       role: "user",
-    //       content: prompt,
-    //     },
-    //   ],
-    //   temperature: 0.7,
-    //   max_tokens: 150,
-    // });
 
     const response = await AI.chat.completions.create({
   model: "llama-3.1-8b-instant",
@@ -223,48 +196,6 @@ export const removeImageObject = async (req, res) => {
   }
 };
 
-// export const resumeReview = async (req, res) => {
-//   try {
-//     const { userId } = req.auth();
-//     const resume = req.file;
-//     const plan = req.plan;
-
-//     if (plan !== "premium") {
-//       return res.json({
-//         success: false,
-//         message: "This feature is only available for premium subscriptions",
-//       });
-//     }
-
-//     if (resume.size > 10 * 1024 * 1024) {
-//       return res.json({success: false, message: 'Resume file size exceeds..'})
-//     }
-
-//     const dataBuffer = fs.readFileSync(resume.path)
-//     const pdfData = await pdf(dataBuffer);
-
-//     const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvements. Resume Content:\n\n${pdfData.text}`
-//     const response = await AI.chat.completions.create({
-//       model: "gemini-2.0-flash",
-//       messages: [
-//         {
-//           role: "user",
-//           content: prompt,
-//         },
-//       ],
-//       temperature: 0.7,
-//       max_tokens: 1000,
-//     });
-
-//     const content = response.choices[0].message.content
-
-//     await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, 'Review the uploaded resume', ${content},'resume-review')`;
-
-//     res.json({success: true, content})
-//   } catch (error) {
-//       res.status(500).json({ success: false, message: error.message });
-//   }
-// };
 
 export const resumeReview = async (req, res) => {
   try {
@@ -335,5 +266,287 @@ ${pdfData.text}
       success: false,
       message: error.message
     });
+  }
+};
+
+export const chatBot = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { messages } = req.body;
+    const plan = req.plan;
+    const free_usage = req.free_usage;
+
+    if (plan !== "premium" && free_usage >= 10) {
+      return res.json({
+        success: false,
+        message: "Limit reached, upgrade the plan to continue..",
+      });
+    }
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.json({
+        success: false,
+        message: "Invalid messages format",
+      });
+    }
+
+    // SYSTEM PROMPT FOR PRODUCT ASSISTANT
+    const systemPrompt = {
+      role: "system",
+      content: `
+You are NeuroGen AI assistant.
+
+You ONLY help users understand and use THIS platform.
+
+Platform Capabilities:
+- AI content generation
+- Image generation
+- Resume reviewing
+- Dashboard-based tools
+
+Your job:
+- Guide users step-by-step
+- Explain features of THIS platform
+- Suggest what they can do next
+
+STRICT RULES:
+- NEVER behave like general ChatGPT
+- ALWAYS stay within platform context
+- If question is unrelated → politely redirect to platform usage
+
+OUTPUT FORMAT (STRICT JSON):
+{
+  "type": "text | list | action",
+  "title": "",
+  "content": "",
+  "points": [],
+  "action": {
+    "label": "",
+    "target": ""
+  }
+}
+`
+    };
+
+    // KEYWORD INTERCEPTION
+    const lastMessage = messages[messages.length - 1].content.toLowerCase();
+
+    // 1. How to use / How this works
+    if (lastMessage.includes("how to use") || lastMessage.includes("how this works")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "list",
+          title: "How to Use NeuroGen AI",
+          content: "Follow these steps to get started:",
+          points: [
+            "Go to Dashboard to access all tools",
+            "Select a tool (Text, Image, Resume, etc.)",
+            "Enter your input and generate results",
+            "Download or reuse your content",
+            "Upgrade for higher limits"
+          ],
+          action: {
+            label: "Go to Dashboard",
+            target: "/ai"
+          }
+        }
+      });
+    }
+
+    // 2. Features / Tools
+    if (lastMessage.includes("features") || lastMessage.includes("tools")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "list",
+          title: "NeuroGen AI Features",
+          content: "Here’s what you can do:",
+          points: [
+            "AI Content Generator",
+            "AI Image Generator",
+            "Resume Reviewer",
+            "Smart Dashboard",
+            "History & Saved Content",
+            "Fast AI responses"
+          ],
+          action: {
+            label: "Explore Tools",
+            target: "/ai"
+          }
+        }
+      });
+    }
+
+    // 3. Pricing / Plan / Upgrade
+    if (lastMessage.includes("pricing") || lastMessage.includes("plan") || lastMessage.includes("upgrade")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Pricing & Plans",
+          content: "Free users have limited usage. Upgrade for more AI generations.",
+          action: {
+            label: "View Plans",
+            target: "/"
+          }
+        }
+      });
+    }
+
+    // 4. Image Generator
+    if (lastMessage.includes("image")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "AI Image Generator",
+          content: "Create stunning images from text prompts.",
+          action: {
+            label: "Start Generating",
+            target: "/ai/generate-images"
+          }
+        }
+      });
+    }
+
+    // 5. Resume Reviewer
+    if (lastMessage.includes("resume")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Resume Reviewer",
+          content: "Upload your resume and get AI feedback instantly.",
+          action: {
+            label: "Review Resume",
+            target: "/ai/review-resume"
+          }
+        }
+      });
+    }
+
+    // 6. Article / Writing
+    if (lastMessage.includes("article") || lastMessage.includes("write")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "AI Article Writer",
+          content: "Generate high-quality, engaging articles on any topic.",
+          action: {
+            label: "Write Article",
+            target: "/ai/write-article"
+          }
+        }
+      });
+    }
+
+    // 7. Blog / Title
+    if (lastMessage.includes("blog") || lastMessage.includes("title")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Blog Title Generator",
+          content: "Find the perfect, catchy title for your blog posts.",
+          action: {
+            label: "Generate Titles",
+            target: "/ai/blog-titles"
+          }
+        }
+      });
+    }
+
+    // 8. Background Removal
+    if (lastMessage.includes("background")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Background Removal",
+          content: "Effortlessly remove backgrounds from your images.",
+          action: {
+            label: "Remove Background",
+            target: "/ai/remove-background"
+          }
+        }
+      });
+    }
+
+    // 9. Object Removal
+    if (lastMessage.includes("object")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Object Removal",
+          content: "Remove unwanted objects from your images seamlessly.",
+          action: {
+            label: "Remove Objects",
+            target: "/ai/remove-object"
+          }
+        }
+      });
+    }
+
+    // 10. Community
+    if (lastMessage.includes("community")) {
+      return res.json({
+        success: true,
+        reply: {
+          type: "action",
+          title: "Community",
+          content: "Explore and share AI-generated content with others.",
+          action: {
+            label: "Go to Community",
+            target: "/ai/community"
+          }
+        }
+      });
+    }
+
+    // Filter out existing system messages and add our strict one
+    const userMessages = messages.filter(m => m.role !== 'system').slice(-5);
+    const finalMessages = [systemPrompt, ...userMessages];
+
+    // SANITIZE MESSAGES: Groq API requires content to be a string
+    const sanitizedMessages = finalMessages.map(msg => ({
+      ...msg,
+      content: typeof msg.content === 'object' ? JSON.stringify(msg.content) : String(msg.content)
+    }));
+
+    const response = await AI.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: sanitizedMessages,
+      temperature: 0.7,
+      max_tokens: 800,
+    });
+
+    const reply = response.choices[0].message.content;
+
+    // SAFE PARSING
+    let parsed;
+    try {
+      parsed = JSON.parse(reply);
+    } catch (err) {
+      parsed = {
+        type: "text",
+        content: reply
+      };
+    }
+
+    if (plan !== 'premium') {
+      await clerkClient.users.updateUserMetadata(userId, {
+        privateMetadata: {
+          free_usage: free_usage + 1
+        }
+      });
+    }
+
+    res.json({ success: true, reply: parsed });
+  } catch (error) {
+    console.error("ChatBot Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -11,6 +11,7 @@ import RemoveObject from './pages/RemoveObject'
 import ReviewResume from './pages/ReviewResume'
 import Community from './pages/Community'
 import {Toaster} from 'react-hot-toast'
+import Chatbot from './components/Chatbot'
 
 const App = () => {
   return (
@@ -29,6 +30,7 @@ const App = () => {
           <Route path='community' element={<Community />} />
         </Route>
       </Routes>
+      <Chatbot />
     </div>
   )
 }
