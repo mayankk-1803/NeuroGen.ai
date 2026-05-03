@@ -115,12 +115,13 @@ const BlogTitle = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full overflow-y-scroll text-sm text-slate-600">
-            <div className="reset-tw">
+          <div className="mt-4 flex-1 overflow-y-auto pr-2">
+            <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl prose prose-sm prose-slate max-w-none">
               <Markdown>{content}</Markdown>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

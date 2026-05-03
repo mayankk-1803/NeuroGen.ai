@@ -5,7 +5,7 @@ import star_icon from "./star_icon.svg";
 import star_dull_icon from "./star_dull_icon.svg";
 import profile_img_1 from "./profile_img_1.png";
 import arrow_icon from "./arrow_icon.svg";
-import { SquarePen, Hash, Image, Eraser, Scissors, FileText } from 'lucide-react'
+import { SquarePen, Hash, Image, Eraser, Scissors, FileText, MessageSquare, Edit3 } from 'lucide-react'
 import ai_gen_img_1 from "./ai_gen_img_1.png";
 import ai_gen_img_2 from "./ai_gen_img_2.png";
 import ai_gen_img_3 from "./ai_gen_img_3.png";
@@ -62,8 +62,23 @@ export const AiToolsData = [
         Icon: FileText,
         bg: { from: '#12B7AC', to: '#08B6CE' },
         path: '/ai/review-resume'
+    },
+    {
+        title: 'PDF Q&A Assistant',
+        description: 'Upload your PDF documents and ask questions to get instant, accurate answers from AI.',
+        Icon: MessageSquare,
+        bg: { from: '#FF4D4D', to: '#F9CB28' },
+        path: '/ai/pdf-qa'
+    },
+    {
+        title: 'AI Content Rewriter',
+        description: 'Rewrite your content in different tones and styles to perfectly match your target audience.',
+        Icon: Edit3,
+        bg: { from: '#4F46E5', to: '#7C3AED' },
+        path: '/ai/content-rewriter'
     }
 ]
+
 
 export const dummyTestimonialData = [
     {

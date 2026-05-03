@@ -533,3 +533,112 @@ OUTPUT FORMAT (STRICT JSON):
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const pdfQa = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { question } = req.body;
+    const file = req.file;
+    const plan = req.plan;
+
+    if (!file) {
+      return res.json({ success: false, message: "No PDF file uploaded" });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return res.json({ success: false, message: "PDF file size exceeds 10MB limit" });
+    }
+
+    // Extract text from PDF
+    const dataBuffer = fs.readFileSync(file.path);
+    const pdfData = await pdf(dataBuffer);
+
+    const isAutoQa = !question || question.trim() === "";
+
+    const prompt = isAutoQa 
+      ? `
+      You are a document intelligence assistant. The user has not provided a specific question.
+      Please analyze the provided PDF context and generate a comprehensive "Questions & Answers" summary.
+      Provide at least 5-7 important questions that can be answered from this document, along with their detailed answers.
+      
+      PDF Context:
+      ${pdfData.text.substring(0, 15000)} 
+
+      Format the response as a clear list of Questions and Answers using Markdown. Use bold for questions.
+      `
+      : `
+      You are a document intelligence assistant. Use the provided PDF context to answer the user's question.
+      If the answer is not in the context, say that you don't have enough information.
+      
+      PDF Context:
+      ${pdfData.text.substring(0, 15000)} 
+
+      User Question:
+      ${question}
+      
+      Format the response cleanly using Markdown.
+      `;
+
+    const response = await AI.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [{ role: "user", content: prompt }],
+      temperature: isAutoQa ? 0.7 : 0.5,
+      max_tokens: 1500,
+    });
+
+    const answer = response.choices[0].message.content;
+
+    await sql`INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, ${isAutoQa ? 'Auto-generated PDF Q&A' : `PDF Q&A: ${question}`}, ${answer}, 'pdf-qa')`;
+
+    res.json({ success: true, answer });
+  } catch (error) {
+    console.error("PDF Q/A Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const rewriteContent = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { text, tone } = req.body;
+    const plan = req.plan;
+    const free_usage = req.free_usage;
+
+    if (plan !== "premium" && free_usage >= 10) {
+      return res.json({ success: false, message: "Limit reached, upgrade the plan to continue.." });
+    }
+
+    const prompt = `
+      Rewrite the following text to be ${tone}. 
+      Ensure the original meaning is preserved but the style, vocabulary, and sentence structure are adjusted to fit the ${tone} tone perfectly.
+      
+      Text to rewrite:
+      ${text}
+      
+      Output only the rewritten text in Markdown format.
+    `;
+
+    const response = await AI.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1500,
+    });
+
+    const content = response.choices[0].message.content;
+
+    await sql`INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, ${`Rewrite text as ${tone}`}, ${content}, 'rewrite')`;
+    
+    if (plan !== 'premium') {
+      await clerkClient.users.updateUserMetadata(userId, {
+        privateMetadata: { free_usage: free_usage + 1 }
+      });
+    }
+
+    res.json({ success: true, content });
+  } catch (error) {
+    console.error("Rewrite Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

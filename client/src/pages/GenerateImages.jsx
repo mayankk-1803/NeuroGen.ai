@@ -48,6 +48,24 @@ const GenerateImages = () => {
     }
     setLoading(false);
   };
+
+  const downloadImage = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `neurogen-ai-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast.error("Failed to download image");
+    }
+  };
+
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700">
       {/* left col */}
@@ -129,8 +147,15 @@ const GenerateImages = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full">
-            <img src={content} alt="" className="w-full h-full" />
+          <div className="mt-3 flex flex-col gap-4">
+            <img src={content} alt="" className="w-full rounded-lg shadow-sm border border-gray-100" />
+            <button 
+              onClick={() => downloadImage(content)}
+              className="flex items-center justify-center gap-2 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-all"
+            >
+              <Sparkles className="w-4 h-4 text-green-600" />
+              Download Image
+            </button>
           </div>
         )}
       </div>
